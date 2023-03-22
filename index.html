@@ -50,10 +50,9 @@
 		}
 		
 		#stables {
-			display: flex;
-			flex-direction: row;
-			justify-content: space-between;
-			margin-bottom: 10px;
+			 display: flex;
+			 flex-direction: row;
+			 justify-content: space-between;
 		}
 
 	</style>
@@ -106,10 +105,10 @@
     </div>
     <div class="refresh">
 		Quantity:
-		<input type="text" id="limit" value="150">
+		<input type="text" id="limit" value="100">
         <button id="refresh-button">Load</button>
 		<div id="loading" style="display:none;">
-			LOADING...
+			PROCESSING...
 		</div>
 
     </div>
@@ -148,7 +147,7 @@
 			
             var table = $('#order-table').DataTable( {
                 "ajax": {
-                    "url": "https://limit-orders.1inch.io/v3.0/42161/limit-order/all?page=1&limit=150&statuses=[1]&sortBy=takerRate&makerAsset=0xff970a61a04b1ca14834a43f5de4533ebddb5cc8&takerAsset=0x912ce59144191c1204e64559fe8253a0e49e6548&_=1679498863116",
+                    "url": "https://limit-orders.1inch.io/v3.0/42161/limit-order/all?page=1&limit=100&statuses=[1]&sortBy=takerRate&makerAsset=0xff970a61a04b1ca14834a43f5de4533ebddb5cc8&takerAsset=0x912ce59144191c1204e64559fe8253a0e49e6548&_=1679498863116",
 					"dataSrc": "",
 					"dataFilter": function(data) {
 						// Parse the JSON data
@@ -181,6 +180,7 @@
 				],
 				"order": [[ 2, "desc" ]],
 				"pageLength": 100,
+				"processing": true,
 				"deferRender": false,
 
 				"createdRow": function (row, data, dataIndex) {
@@ -207,17 +207,6 @@
 					}
 
 				},
-
-				"drawCallback": function( settings ) {
-					// Add a refresh button to the top of the table
-					$('#order-table_wrapper > .dt-buttons').prepend('<button class="btn btn-primary btn-sm refresh-btn">Refresh</button>');
-
-					// Handle refresh button click event
-					$('.refresh-btn').click(function() {
-						table.ajax.reload();
-					});
-				},
-
 
 				"footerCallback": function ( row, data, start, end, display ) {
 					var api = this.api(), data;
@@ -252,38 +241,45 @@
 						'Total Makers Volume (this page): '+ parseFloat(pageVolume / 10 ** makerDec).toFixed()+'<br>'+
 						'Total Makers Volume (all pages): '+ parseFloat(totalVolume / 10 ** makerDec).toFixed()
 					);
+									
+					// hide loading spinner
+					$('#loading').hide();
 				}
+			
 			});
+			
+			$('#order-table').on( 'preXhr.dt', function () {
+				$('#loading').show();
+			} ).dataTable();
 			
 			$('#refresh-button').click(function() {
-			  // show loading spinner
-			  $('#loading').show();
+				
+				var makerAsset = $("#makerAsset").val();
+				var takerAsset = $("#takerAsset").val();
+				var _makerDec = $("#makerDec").val();
+				var _takerDec = $("#takerDec").val();
+				var chainId = $("#chainId").val();
+				var appVersions = $("#appVersions").val();
+				var statuses = $("#statuses").val();
+				var limit = $("#limit").val();
 
-			  var makerAsset = $("#makerAsset").val();
-			  var takerAsset = $("#takerAsset").val();
-			  var _makerDec = $("#makerDec").val();
-			  var _takerDec = $("#takerDec").val();
-			  var chainId = $("#chainId").val();
-			  var appVersions = $("#appVersions").val();
-			  var statuses = $("#statuses").val();
-			  var limit = $("#limit").val();
+				var url = "https://limit-orders.1inch.io/v" + appVersions + "/" + chainId + "/limit-order/all?" +
+					"page=1&limit=" + limit + "&statuses=[" + statuses + "]&sortBy=takerRate" +
+					"&makerAsset=" + makerAsset + "&takerAsset=" + takerAsset;
 
-			  var url = "https://limit-orders.1inch.io/v" + appVersions + "/" + chainId + "/limit-order/all?" +
-				"page=1&limit=" + limit + "&statuses=[" + statuses + "]&sortBy=takerRate" +
-				"&makerAsset=" + makerAsset + "&takerAsset=" + takerAsset;
+				makerDec = parseInt(_makerDec);
+				takerDec = parseInt(_takerDec);
+				
+				table.ajax.url(url).load();
 
-			  makerDec = parseInt(_makerDec);
-			  takerDec = parseInt(_takerDec);
-			  table.ajax.url(url).load(function() {
-				// hide loading spinner
-				$('#loading').hide();
-			  });
 			});
 			
-			table.ajax.url(url).load(function() {
-			  // hide loading spinner
-			  $('#loading').hide();
-			});
+			// A function to refresh the table data
+			function refreshTableData() {	
+				table.ajax.reload();
+			};
+
+			setInterval(refreshTableData, 5000); // 5000 milliseconds = 5 seconds
 
 		});
 
