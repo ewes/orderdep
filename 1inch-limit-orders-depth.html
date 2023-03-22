@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Order Table</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css">
+    <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+	<style>
+		.container {
+		  display: flex;
+		  flex-direction: row;
+		  justify-content: space-between;
+		  margin: 20px;
+		}
+
+		.column {
+		  display: flex;
+		  flex-direction: column;
+		  margin-right: 30px;
+		}
+
+		.refresh {
+		  margin: 20px;
+		}
+		
+		h1 {
+		  text-align: center;
+		  font-size: 2em;
+		}
+
+
+		h3 {
+		  margin-top: 10px;
+		  margin-bottom: 5px;
+		}
+		
+		#makerDec, #takerDec, #limit {
+		  width: 30px;
+		  margin-bottom: 10px;
+		}
+		
+		#total-volume {
+			font-size: 1em;
+			margin-bottom: 20px;
+		}
+		
+		#refresh-button {
+			font-size: 1em;
+			width: 80px;
+		}
+
+	</style>
+</head>
+<body>
+	<h1>1inch limit order depth</h1>
+    <div class="container">
+        <div class="column">
+            <h3>Sell:</h3>
+            <input type="text" id="makerAsset" value="0xff970a61a04b1ca14834a43f5de4533ebddb5cc8">
+			<h3>Sell Asset Decimals (usual 18, but for USDC is 6):</h3>
+            <input type="text" id="makerDec" value="6">
+
+            <h3>Buy:</h3>
+            <input type="text" id="takerAsset" value="0x912ce59144191c1204e64559fe8253a0e49e6548">
+			<h3>Buy Asset Decimals:</h3>
+            <input type="text" id="takerDec" value="18">
+        </div>
+        <div class="column">
+            <h3>Chain:</h3>
+            <select id="chainId">
+                <option value="1">Ethereum</option>
+                <option value="10">Optimism</option>
+                <option value="137">Polygon</option>
+                <option value="42161" selected>Arbitrum</option>
+            </select>
+            <h3>1inch Version:</h3>
+            <select id="appVersions">
+                <option value="2.0">2.0</option>
+                <option value="3.0" selected>3.0</option>
+            </select>
+            <h3>Statuses:</h3>
+            <select id="statuses" multiple>
+                <option value="1" selected>Valid</option>
+                <option value="2">Temporary Invalid (Cannot be fully filled)</option>
+                <option value="3">Invalid</option>
+            </select>
+        </div>
+    </div>
+    <div class="refresh">
+		Quantity:
+		<input type="text" id="limit" value="150">
+        <button id="refresh-button">Load</button>
+		<div id="loading" style="display:none;">
+			LOADING...
+		</div>
+
+    </div>
+	
+    <div id="total-volume"></div>
+	<hr/>
+    <table id="order-table" class="display compact">
+        <thead>
+            <tr>
+                <th>Maker</th>
+                <th>Maker Balance</th>
+                <th>Taker Rate</th>
+                <th>Order Amount</th>
+                <th>Amount Remaining</th>
+                <th>Create Date</th>
+                <th>Agg. Makers Volume</th>
+            </tr>
+        </thead>
+        <tfoot>
+            <tr>
+                <th>Maker</th>
+                <th>Maker Balance</th>
+                <th>Taker Rate</th>
+                <th>Limit Amount</th>
+                <th>Limit Remaining</th>
+                <th>Create Date</th>
+                <th>Agg. Makers Volume</th>
+            </tr>
+        </tfoot>
+    </table>
+
+    <script>
+        $(document).ready(function() {
+			var makerDec = 6;
+			var takerDec = 18;
+			
+            var table = $('#order-table').DataTable( {
+                "ajax": {
+                    "url": "https://limit-orders.1inch.io/v3.0/42161/limit-order/all?page=1&limit=150&statuses=[1]&sortBy=takerRate&makerAsset=0xff970a61a04b1ca14834a43f5de4533ebddb5cc8&takerAsset=0x912ce59144191c1204e64559fe8253a0e49e6548&_=1679498863116",
+					"dataSrc": "",
+					"dataFilter": function(data) {
+						// Parse the JSON data
+						var parsedData = JSON.parse(data);
+						
+ 
+						// Initialize remainingMakerAmountAgg property in each object
+						for (var i = 0; i < parsedData.length; i++) {
+							parsedData[i].remainingMakerAmountAgg = 0;
+						}
+						
+						// Sort the data by takerRate
+						parsedData.sort(function(a, b) {
+							return parseFloat(b.takerRate) - parseFloat(a.takerRate);
+						});
+						
+						// Return the sorted data
+						return JSON.stringify(parsedData);
+					}
+
+				},
+				"columns": [
+					{ "data": "data.maker" },
+					{ "data": "makerBalance" },
+					{ "data": "takerRate" },
+					{ "data": "data.makingAmount" },
+					{ "data": "remainingMakerAmount" },
+					{ "data": "createDateTime" },
+					{ "data": null, "defaultContent": "", "orderable": false, "searchable": false }
+				],
+				"order": [[ 2, "desc" ]],
+				"pageLength": 100,
+				"deferRender": false,
+
+				"createdRow": function (row, data, dataIndex) {
+					var remainingMakerAmountV = parseFloat(data.remainingMakerAmount);
+					var volume = remainingMakerAmountV;
+
+					if (dataIndex > 0) {
+						var previousData = this.api().row(dataIndex - 1).data();
+						var previousVolume = parseFloat(previousData.remainingMakerAmountAgg);
+						volume += previousVolume;
+					}
+
+					data.remainingMakerAmountAgg = volume;
+					$(row).find('td:last').html(parseFloat(volume / 10 ** makerDec).toFixed());
+					$(row).find('td:eq(1)').html(parseFloat(data.makerBalance / 10 ** makerDec).toFixed());
+					$(row).find('td:eq(2)').html(parseFloat(data.takerRate * 10 ** (takerDec - makerDec)));
+					$(row).find('td:eq(3)').html(parseFloat(data.data.makingAmount / 10 ** makerDec).toFixed());
+					$(row).find('td:eq(4)').html(parseFloat(data.remainingMakerAmount / 10 ** makerDec).toFixed());
+					
+					// Highlight rows where remainingMakerAmount is greater than makerBalance
+					var makerBalance = parseFloat(data.makerBalance);
+					if (remainingMakerAmountV > makerBalance) {
+						$(row).addClass('highlight');
+					}
+
+				},
+
+				"drawCallback": function( settings ) {
+					// Add a refresh button to the top of the table
+					$('#order-table_wrapper > .dt-buttons').prepend('<button class="btn btn-primary btn-sm refresh-btn">Refresh</button>');
+
+					// Handle refresh button click event
+					$('.refresh-btn').click(function() {
+						table.ajax.reload();
+					});
+				},
+
+
+				"footerCallback": function ( row, data, start, end, display ) {
+					var api = this.api(), data;
+
+                    // Remove the formatting to get integer data for summation
+                    var intVal = function ( i ) {
+                        return typeof i === 'string' ?
+                            i.replace(/[\$,]/g, '')*1 :
+                            typeof i === 'number' ?
+                                i : 0;
+                    };
+
+                    // Total volume over all pages
+                    totalVolume = api
+                        .column( 3 )
+                        .data()
+                        .reduce( function (a, b) {
+                            return intVal(a) + intVal(b);
+                        }, 0 );
+
+                    // Total volume over this page
+                    pageVolume = api
+                        .column( 3, { page: 'current'} )
+                        .data()
+                        .reduce( function (a, b) {
+                            return intVal(a) + intVal(b);
+                        }, 0 );
+
+
+					// Update footer
+					$('#total-volume').html(
+						'Total Makers Volume (this page): '+ parseFloat(pageVolume / 10 ** makerDec).toFixed()+'<br>'+
+						'Total Makers Volume (all pages): '+ parseFloat(totalVolume / 10 ** makerDec).toFixed()
+					);
+				}
+			});
+			
+			$('#refresh-button').click(function() {
+			  // show loading spinner
+			  $('#loading').show();
+
+			  var makerAsset = $("#makerAsset").val();
+			  var takerAsset = $("#takerAsset").val();
+			  var _makerDec = $("#makerDec").val();
+			  var _takerDec = $("#takerDec").val();
+			  var chainId = $("#chainId").val();
+			  var appVersions = $("#appVersions").val();
+			  var statuses = $("#statuses").val();
+			  var limit = $("#limit").val();
+
+			  var url = "https://limit-orders.1inch.io/v" + appVersions + "/" + chainId + "/limit-order/all?" +
+				"page=1&limit=" + limit + "&statuses=[" + statuses + "]&sortBy=takerRate" +
+				"&makerAsset=" + makerAsset + "&takerAsset=" + takerAsset;
+
+			  makerDec = parseInt(_makerDec);
+			  takerDec = parseInt(_takerDec);
+			  table.ajax.url(url).load(function() {
+				// hide loading spinner
+				$('#loading').hide();
+			  });
+			});
+			
+			table.ajax.url(url).load(function() {
+			  // hide loading spinner
+			  $('#loading').hide();
+			});
+
+		});
+
+	</script>
+</body>
+</html>
