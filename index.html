@@ -48,6 +48,12 @@
 			font-size: 1em;
 			width: 80px;
 		}
+		
+		#stables {
+			 display: flex;
+			 flex-direction: row;
+			 justify-content: space-between;
+		}
 
 	</style>
 </head>
@@ -59,6 +65,17 @@
             <input type="text" id="makerAsset" value="0xff970a61a04b1ca14834a43f5de4533ebddb5cc8">
 			<h3>Sell Asset Decimals (usual 18, but for USDC is 6):</h3>
             <input type="text" id="makerDec" value="6">
+			<div id="stables">
+				<a href="#" onclick="
+						document.getElementById('makerAsset').value = '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9';
+						document.getElementById('makerDec').value = '6';">USDT Arb</a>
+				<a href="#" onclick="
+						document.getElementById('makerAsset').value = '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8';
+						document.getElementById('makerDec').value = '6';">USDC Arb</a>
+				<a href="#" onclick="
+						document.getElementById('makerAsset').value = '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1';
+						document.getElementById('makerDec').value = '18';">DAI Arb</a>
+			</div>
 
             <h3>Buy:</h3>
             <input type="text" id="takerAsset" value="0x912ce59144191c1204e64559fe8253a0e49e6548">
