@@ -75,6 +75,9 @@
 				<a href="#" onclick="
 						document.getElementById('makerAsset').value = '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1';
 						document.getElementById('makerDec').value = '18';">DAI Arb</a>
+				<a href="#" onclick="
+						document.getElementById('makerAsset').value = '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1';
+						document.getElementById('makerDec').value = '18';">WETH Arb</a>
 			</div>
 
             <h3>Buy:</h3>
@@ -195,11 +198,11 @@
 					}
 
 					data.remainingMakerAmountAgg = volume;
-					$(row).find('td:last').html(parseFloat(volume / 10 ** makerDec).toFixed());
-					$(row).find('td:eq(1)').html(parseFloat(data.makerBalance / 10 ** makerDec).toFixed());
+					$(row).find('td:last').html(parseFloat(volume / 10 ** makerDec));
+					$(row).find('td:eq(1)').html(parseFloat(data.makerBalance / 10 ** makerDec));
 					$(row).find('td:eq(2)').html(parseFloat(data.takerRate * 10 ** (takerDec - makerDec)));
-					$(row).find('td:eq(3)').html(parseFloat(data.data.makingAmount / 10 ** makerDec).toFixed());
-					$(row).find('td:eq(4)').html(parseFloat(data.remainingMakerAmount / 10 ** makerDec).toFixed());
+					$(row).find('td:eq(3)').html(parseFloat(data.data.makingAmount / 10 ** makerDec));
+					$(row).find('td:eq(4)').html(parseFloat(data.remainingMakerAmount / 10 ** makerDec));
 					
 					// Highlight rows where remainingMakerAmount is greater than makerBalance
 					var makerBalance = parseFloat(data.makerBalance);
@@ -239,8 +242,8 @@
 
 					// Update footer
 					$('#total-volume').html(
-						'Total Makers Volume (this page): '+ parseFloat(pageVolume / 10 ** makerDec).toFixed()+'<br>'+
-						'Total Makers Volume (all pages): '+ parseFloat(totalVolume / 10 ** makerDec).toFixed()
+						'Total Makers Volume (this page): '+ parseFloat(pageVolume / 10 ** makerDec))+'<br>'+
+						'Total Makers Volume (all pages): '+ parseFloat(totalVolume / 10 ** makerDec)
 					);
 									
 					// hide loading spinner
