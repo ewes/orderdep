@@ -62,22 +62,17 @@
     <div class="container">
         <div class="column">
             <h3>Sell:</h3>
-            <input type="text" id="makerAsset" value="0xff970a61a04b1ca14834a43f5de4533ebddb5cc8">
+            <input type="text" id="makerAsset" value="0xd2b6bf88b7d9da599331719e338fcdeb235a0b99">
 			<h3>Sell Asset Decimals (usual 18, but for USDC is 6):</h3>
             <input type="text" id="makerDec" value="6">
 			<div id="stables">
 				<a href="#" onclick="
-						document.getElementById('makerAsset').value = '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9';
-						document.getElementById('makerDec').value = '6';">USDT Arb</a>
+						document.getElementById('makerAsset').value = '0x55d398326f99059ff775485246999027b3197955';
+						document.getElementById('makerDec').value = '18';">USDT BSC</a>
 				<a href="#" onclick="
-						document.getElementById('makerAsset').value = '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8';
-						document.getElementById('makerDec').value = '6';">USDC Arb</a>
-				<a href="#" onclick="
-						document.getElementById('makerAsset').value = '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1';
-						document.getElementById('makerDec').value = '18';">DAI Arb</a>
-				<a href="#" onclick="
-						document.getElementById('makerAsset').value = '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1';
-						document.getElementById('makerDec').value = '18';">WETH Arb</a>
+						document.getElementById('makerAsset').value = '0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56';
+						document.getElementById('makerDec').value = '18';">BUSD BSC</a>
+				
 			</div>
 
             <h3>Buy:</h3>
@@ -88,7 +83,7 @@
         <div class="column">
             <h3>Chain:</h3>
             <select id="chainId">
-                <option value="1">Ethereum</option>
+                <option value="56">BNB chain</option>
                 <option value="10">Optimism</option>
                 <option value="137">Polygon</option>
                 <option value="42161" selected>Arbitrum</option>
